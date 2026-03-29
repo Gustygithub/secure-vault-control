@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useRole, type AppRole } from "@/contexts/RoleContext";
 import {
   Sidebar,
   SidebarContent,
@@ -22,13 +23,13 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const mainItems = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
-  { title: "Documentos", url: "/documents", icon: FileText },
-  { title: "Solicitudes", url: "/requests", icon: Send },
-  { title: "Incidentes", url: "/incidents", icon: AlertTriangle },
-  { title: "Certificaciones", url: "/certifications", icon: ShieldCheck },
-  { title: "Auditoría", url: "/audit", icon: ClipboardList },
+const allItems = [
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, roles: ["admin", "usuario", "cliente"] as AppRole[] },
+  { title: "Documentos", url: "/documents", icon: FileText, roles: ["admin", "usuario", "cliente"] as AppRole[] },
+  { title: "Solicitudes", url: "/requests", icon: Send, roles: ["admin", "usuario", "cliente"] as AppRole[] },
+  { title: "Incidentes", url: "/incidents", icon: AlertTriangle, roles: ["admin", "usuario"] as AppRole[] },
+  { title: "Certificaciones", url: "/certifications", icon: ShieldCheck, roles: ["admin", "usuario"] as AppRole[] },
+  { title: "Auditoría", url: "/audit", icon: ClipboardList, roles: ["admin"] as AppRole[] },
 ];
 
 const adminItems = [
@@ -39,6 +40,9 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { role } = useRole();
+
+  const visibleItems = allItems.filter((item) => item.roles.includes(role));
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
@@ -60,7 +64,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainItems.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -79,30 +83,32 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            Administración
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end
-                      className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                      activeClassName="bg-primary/10 text-primary font-semibold"
-                    >
-                      <item.icon className="h-4 w-4 flex-shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {role === "admin" && (
+          <SidebarGroup>
+            <SidebarGroupLabel className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+              Administración
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        end
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+                        activeClassName="bg-primary/10 text-primary font-semibold"
+                      >
+                        <item.icon className="h-4 w-4 flex-shrink-0" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );
