@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Bell, Search, Shield, LogOut, Settings, User, ChevronDown } from "lucide-react";
+import { Bell, Search, Shield, LogOut, Settings, User, ChevronDown, ArrowRightLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -13,9 +13,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
+import { useRole, type AppRole } from "@/contexts/RoleContext";
+import { StatusBadge } from "@/components/ui/status-badge";
+
+const roleBadgeVariant: Record<AppRole, "info" | "success" | "neutral"> = {
+  admin: "info",
+  usuario: "success",
+  cliente: "neutral",
+};
 
 export function DashboardLayout() {
   const navigate = useNavigate();
+  const { role, user, setRole } = useRole();
 
   return (
     <SidebarProvider>
@@ -40,20 +49,45 @@ export function DashboardLayout() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Role Switcher (demo) */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs">
+                    <ArrowRightLeft className="h-3 w-3" />
+                    <span className="hidden sm:inline">Demo:</span>
+                    <StatusBadge variant={roleBadgeVariant[role]}>{user.roleLabel}</StatusBadge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">Cambiar vista (demo)</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setRole("admin")} className={`cursor-pointer ${role === "admin" ? "bg-accent" : ""}`}>
+                    <Shield className="mr-2 h-4 w-4 text-primary" /> Administrador
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setRole("usuario")} className={`cursor-pointer ${role === "usuario" ? "bg-accent" : ""}`}>
+                    <User className="mr-2 h-4 w-4 text-secondary" /> Usuario
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setRole("cliente")} className={`cursor-pointer ${role === "cliente" ? "bg-accent" : ""}`}>
+                    <User className="mr-2 h-4 w-4 text-muted-foreground" /> Cliente
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Button variant="ghost" size="icon" className="relative">
                 <Bell className="h-4 w-4" />
                 <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
               </Button>
 
+              {/* User menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-2 h-9">
                     <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-primary">CR</span>
+                      <span className="text-sm font-semibold text-primary">{user.initials}</span>
                     </div>
                     <div className="hidden sm:flex flex-col items-start">
-                      <span className="text-sm font-medium text-foreground leading-tight">Carlos Rodríguez</span>
-                      <span className="text-xs text-muted-foreground leading-tight">Administrador</span>
+                      <span className="text-sm font-medium text-foreground leading-tight">{user.name}</span>
+                      <span className="text-xs text-muted-foreground leading-tight">{user.roleLabel}</span>
                     </div>
                     <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
                   </Button>
@@ -61,8 +95,8 @@ export function DashboardLayout() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium text-foreground">Carlos Rodríguez</p>
-                      <p className="text-xs text-muted-foreground">carlos.r@empresa.com</p>
+                      <p className="text-sm font-medium text-foreground">{user.name}</p>
+                      <p className="text-xs text-muted-foreground">{user.email}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
