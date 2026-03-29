@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Bell, Search, Shield, LogOut, Settings, User, ChevronDown, ArrowRightLeft } from "lucide-react";
+import { Bell, Search, Shield, LogOut, Settings, User, ChevronDown, ArrowRightLeft, Moon, Sun, Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -14,17 +14,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useNavigate } from "react-router-dom";
 import { useRole, type AppRole } from "@/contexts/RoleContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { StatusBadge } from "@/components/ui/status-badge";
 
-const roleBadgeVariant: Record<AppRole, "info" | "success" | "neutral"> = {
+const roleBadgeVariant: Record<AppRole, "info" | "success" | "neutral" | "warning"> = {
   admin: "info",
   usuario: "success",
   cliente: "neutral",
+  notario: "warning",
 };
 
 export function DashboardLayout() {
   const navigate = useNavigate();
   const { role, user, setRole } = useRole();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <SidebarProvider>
@@ -49,6 +52,11 @@ export function DashboardLayout() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              {/* Theme toggle */}
+              <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-8 w-8" title={theme === "light" ? "Modo oscuro" : "Modo claro"}>
+                {theme === "light" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+              </Button>
+
               {/* Role Switcher (demo) */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -70,6 +78,9 @@ export function DashboardLayout() {
                   <DropdownMenuItem onClick={() => setRole("cliente")} className={`cursor-pointer ${role === "cliente" ? "bg-accent" : ""}`}>
                     <User className="mr-2 h-4 w-4 text-muted-foreground" /> Cliente
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setRole("notario")} className={`cursor-pointer ${role === "notario" ? "bg-accent" : ""}`}>
+                    <Scale className="mr-2 h-4 w-4 text-warning" /> Notario/Certificador
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -87,7 +98,7 @@ export function DashboardLayout() {
                     </div>
                     <div className="hidden sm:flex flex-col items-start">
                       <span className="text-sm font-medium text-foreground leading-tight">{user.name}</span>
-                      <span className="text-xs text-muted-foreground leading-tight">{user.roleLabel}</span>
+                      <span className="text-xs text-muted-foreground leading-tight">{user.company} · {user.roleLabel}</span>
                     </div>
                     <ChevronDown className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
                   </Button>
@@ -97,6 +108,7 @@ export function DashboardLayout() {
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium text-foreground">{user.name}</p>
                       <p className="text-xs text-muted-foreground">{user.email}</p>
+                      <p className="text-xs text-muted-foreground font-medium">{user.company}</p>
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
