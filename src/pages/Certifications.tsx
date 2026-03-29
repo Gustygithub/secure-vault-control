@@ -1,9 +1,19 @@
 import { useState } from "react";
-import { ShieldCheck, Search, CheckCircle2, XCircle, Hash } from "lucide-react";
+import { ShieldCheck, Search, CheckCircle2, XCircle, Hash, Scale, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRole } from "@/contexts/RoleContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const certifications = [
   { code: "SV-CERT-2024-001", document: "Acta_Junta_089.pdf", date: "2024-03-15", hash: "a7ffc6f8bf1ed766...f8434a" },
@@ -14,6 +24,11 @@ const certifications = [
 export default function Certifications() {
   const [verifyCode, setVerifyCode] = useState("");
   const [verifyResult, setVerifyResult] = useState<"valid" | "invalid" | null>(null);
+  const [certifyDialog, setCertifyDialog] = useState(false);
+  const [notaryId, setNotaryId] = useState("");
+  const [notaryPassword, setNotaryPassword] = useState("");
+  const { role } = useRole();
+  const { toast } = useToast();
 
   const handleVerify = () => {
     if (!verifyCode.trim()) return;
@@ -21,11 +36,27 @@ export default function Certifications() {
     setVerifyResult(found ? "valid" : "invalid");
   };
 
+  const handleCertify = () => {
+    if (notaryId.trim() && notaryPassword.trim()) {
+      toast({ title: "Documento certificado", description: "La firma electrónica ha sido registrada exitosamente." });
+      setCertifyDialog(false);
+      setNotaryId("");
+      setNotaryPassword("");
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Certificaciones</h1>
-        <p className="text-sm text-muted-foreground">Verificación y certificación de documentos</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Certificaciones</h1>
+          <p className="text-sm text-muted-foreground">Verificación y certificación de documentos</p>
+        </div>
+        {role === "notario" && (
+          <Button className="gradient-primary text-primary-foreground gap-2" onClick={() => setCertifyDialog(true)}>
+            <Scale className="h-4 w-4" /> Certificar documento
+          </Button>
+        )}
       </div>
 
       {/* Verification section */}
@@ -116,6 +147,41 @@ export default function Certifications() {
           ))}
         </div>
       </div>
+
+      {/* Notary Certify Dialog */}
+      <Dialog open={certifyDialog} onOpenChange={setCertifyDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Scale className="h-5 w-5 text-primary" /> Certificar documento
+            </DialogTitle>
+            <DialogDescription>
+              Ingrese sus credenciales notariales para firmar electrónicamente el documento.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="notary-id">Número de cédula notarial</Label>
+              <Input id="notary-id" placeholder="Ej: NOT-2024-00123" value={notaryId} onChange={(e) => setNotaryId(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notary-pass">Contraseña de firma electrónica</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input id="notary-pass" type="password" placeholder="••••••••" className="pl-9" value={notaryPassword} onChange={(e) => setNotaryPassword(e.target.value)} />
+              </div>
+            </div>
+            <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+              <p className="text-xs text-muted-foreground">
+                <strong className="text-warning">⚠ Aviso legal:</strong> Al certificar este documento, usted confirma su autenticidad bajo responsabilidad notarial conforme a la legislación vigente.
+              </p>
+            </div>
+            <Button className="w-full gradient-primary text-primary-foreground" onClick={handleCertify} disabled={!notaryId.trim() || !notaryPassword.trim()}>
+              <ShieldCheck className="h-4 w-4 mr-2" /> Firmar y certificar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
